@@ -1,4 +1,4 @@
-# charliesspacegenerator
+# Charlie's Space Generator
 
 Javascript fictional space star system generator.
 
@@ -10,7 +10,7 @@ Generation algorithm by Charlie Brassley of http://beardbunker.blogspot.com
 
 Incorporates David Bau's Seedrandom library https://github.com/davidbau/seedrandom under MIT License
 
-=MIT License=
+##MIT License##
 
 Copyright 2016 Michael de Selincourt
 
