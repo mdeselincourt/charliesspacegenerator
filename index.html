@@ -1,0 +1,387 @@
+<html>
+<head>
+<link id="pagestyle" rel="stylesheet" type="text/css" href="normal.css"/>
+<script src="seedrandom.min.js"></script>
+<script type='text/javascript'> 
+
+/* Charlie's Star System Generator v1.0 by Mike de Selincourt, November 2016
+ *
+ * Iteratively generates fictional star systems */
+
+// Iteration variables, global so they can be referenced between functions (because I'm too lazy to implement them as arguments :( naughty mike )
+var systemStar;
+var starPlanet;
+var planetMoon;
+
+// Planet-naming literals
+var PERSONNAMES = ["Charlie", "Michael", "Alexandra", "Alastair", "Gideon", "Thomas", "Drake", "Anjaal", "Habermann", "Kovach", "Bastian", "Vandemar", "Rosamund", "Carscallen", "Laius", "Ortano", "Gereon", "Priscus", "Barnabus", "Avrahem", "Sarala", "Roshaan", "Naira", "Rabindran", "Oxana", "Volkova", "Gallo", "Erastus", "Azaryah", "Athalia", "Hadassah", "Czetka", "Resnik", "Ricard", "Ferrer", "Nasim", "Farah", "Janiel", "Hargrieve", "Chioma", "Nakato", "Illiam", "Pherick", "Varl", "Acorda", "Coriela", "Sandro", "Belisarius", "Aubrey", "Cavendish", "Seni", "Takker"];
+var WORLDNAMETYPES = ["World", "Landing", "Sphere", "Claim", "Finding", "Frontier", "Planet", "Orb", "Redoubt", "Hideout", "Outpost", "Retreat", "Bastion", "Fortress", "Folly", "Dream", "Utopia", "Elysium", "Gamble", "Chance", "Salvation", "Disappointment", "Grave", "Tomb", "Rock", "Jewel", "Memory", "Memorial", "Death", "Haven", "Landfall", "Ruin", "Wreck", "Hope", "Prayer", "Blessing", "Hideaway", "Legacy", "End"];
+
+// Function definitions
+
+// Generate a star system outside the context of the generation of an entire sector 
+function generateJustSystem() {
+	
+    var output = "";
+	var starcount = document.getElementById('starsDropdown').value;
+	var seed = document.getElementById('seed').value;
+	
+	//console.log("SEED:" + seed);
+	
+	// Seed the randomiser (this relies on the seedrandom.min.js library)
+	Math.seedrandom(seed);	
+	
+	output += generateSystem(starcount);
+	
+	display(output);
+}
+
+// Generate an entire sector of systems
+function generateSector(systems) {
+  
+  	var seed = document.getElementById('seed').value;
+	//console.log("SEED:'" + seed + "'");
+	Math.seedrandom(seed);	
+  
+  var sector = "";
+  for (sectorSystem = 1; sectorSystem <= systems; sectorSystem++) {
+  
+	var starsdistribution = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 5];
+	var stars = starsdistribution[r(starsdistribution.length)-1];
+  
+    sector += "*System " + sectorSystem + ", " + generateSystem(stars) + "<br/>";
+  }
+  return sector;
+}
+
+// Generate a star system with the provided number of stars
+function generateSystem(stars) {  
+
+  var system = "";
+  var spectraldistribution = ["G/yellow", "G/yellow", "G/white", "K/orange", "K/orange", "K/red", "M/red", "K/red", "O/blue", "B/blue"];
+
+  // For each star
+  for (systemStar = 1; systemStar <= stars; systemStar++) {
+  
+	// Markup
+    system += "<br/>**";
+	
+	// Designate star
+	system += "" + ["A","B","C","D","E","F","G","H","I"][systemStar-1] + ", ";
+	
+	// Generate spectral type and size
+    var spectral = spectraldistribution[r(spectraldistribution.length) - 1] + " ";
+	
+	// Size
+	var sizeRoll = r(8);
+    var specialdistribution = ["dwarf", "dwarf", "dwarf", "dwarf", "dwarf", "'''pulsar'''", "'''pulsar'''", "giant", "giant", "giant", "supergiant", "supergiant", "supergiant"];
+	var size = "";
+	
+	// You only get specials rolling 8 on a d8
+    if (sizeRoll == 8) {
+      size = specialdistribution[r(specialdistribution.length) - 1];
+    }
+	
+	if (size === "'''pulsar'''") 
+	{
+		// Don't show the spectral type of a pulsar
+	}
+	else { 
+		// Show spectral type
+		system += spectral + " "; 
+	}
+	
+	system += size + " ";
+	
+	// Only continue generating this star's satellites if it is NOT a dwarf, pulsar or supergiant.
+	//console.log("size is '" + size + "'");
+	
+	if (!(size == "dwarf" || size == "'''pulsar'''" || size == "supergiant")) {
+	
+		system += generatePlanets();
+	}
+  }
+
+return system;
+}
+
+// Should really be called something like "generate orbital positions" - 
+// each result will contain a planet or a twin, and could in future contain 
+// also e.g. asteroid belts, etc, but these are not currently supported
+function generatePlanets() {
+
+	var planets = "";
+    var count = r(10);
+	var material = "";
+	
+	//planets += "there are " + count + " planets";
+  
+	for (starPlanet=1; starPlanet <= count; starPlanet++) {
+  
+	//console.log("generating Planet " + starPlanet + "...");
+	
+	// Determine size of the next planet (do it here)
+	
+	var nextPlanetSize = planetsize = ["tiny","small","slightly small","","","","","slightly large","large","huge"][r(10)-1];
+	var nextPlanetmaterial = ["gas", "rock", "ice"][r(3)-1];
+	
+	// On a "crit" the planet is a twin
+	if (r(20) == 20)
+	{
+		// Twin worlds
+		// The 0, 1 parameter defines these as siblings and could be extended to support triplets, quads, etc. etc.
+		// Notice how this reuses size and material in both calls, so the twins are similar
+		planets += generatePlanet(nextPlanetSize, nextPlanetmaterial, 0); 
+		planets += generatePlanet(nextPlanetSize, nextPlanetmaterial, 1);
+	}
+	else
+	{
+		// Normal non-twin planet
+		planets += generatePlanet(nextPlanetSize, nextPlanetmaterial);
+	}
+  }
+  
+  return planets;
+}
+
+// Generates a single planet. 
+// If twinIndex is set, the planet will be designated as a twin 
+// at the time of writing twins get special designations (alpha, beta) and also have different moon probabilities
+function generatePlanet(thisPlanetSize, thisPlanetMaterial, twinIndex) {
+
+	//console.log("generatePlanet()...");
+	var planet = "";
+	var planetsize = "";
+	var atmosphereGrade = "";
+
+	// Markup
+	planet += "<br/>***";
+	
+	// Designate planet
+	planet += " " + ["A","B","C","D","E","F","G","H","I"][systemStar-1] + " " + starPlanet;
+	
+	// If the planet has a twinIndex it gets a greek letter 
+	if (typeof twinIndex != "undefined") {
+		//console.log("This is a twin...");
+		planet += " " + ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron"][twinIndex] + " ";
+	}
+	
+	planet += ": ";
+	
+	// Always name the planet (for consistent use of the seeded values) but only SHOW it if checkbox is ticked
+	planetname = "'" + PERSONNAMES[r(PERSONNAMES.length)-1] + "'s " + WORLDNAMETYPES[r(WORLDNAMETYPES.length)-1] + "' ";
+	if(document.getElementById('generateNames').checked == true) {	
+		planet += planetname;
+	}
+	
+	// Describe planet
+	planet += thisPlanetSize + " ";
+	
+	planet += thisPlanetMaterial + " world: "; 
+	
+	// Non-gas planets have minerals, ores, topology, vulcanism and variant atmospheres
+	if (thisPlanetMaterial !== "gas") {	
+	
+		planet += generateAtmosphere(thisPlanetMaterial);
+		
+		planet += ["smooth, ","", "rugged, "][r(3)-1];	
+		
+		planet += ["dormant, ","", "volcanic, "][r(3)-1];	
+		
+		planet += ["mineral-poor, ","average minerals, ","'''mineral-rich''', "][r(3)-1];
+		planet += ["ore-poor, ","average ores, ", "'''ore-rich''', "][r(3)-1];
+	}
+	
+	// Planets have rings on a d3 = 3
+	if (r(3) == 3) {
+	
+		// Rings are equally likely to be either ice or rock
+		if (r(2) == 1) {
+			planet += ["poor", "average", "'''bounteous'''"][r(3)-1] + " ice rings, ";
+		}
+		else
+		{
+			planet += ["poor", "average", "'''bounteous'''"][r(3)-1] + " rock rings, ";
+		}
+	}
+	
+	// A flat 1 in 6 chance of life - the nature of life (native? complex?) is currently left
+	// to the imagination of the reader
+	planet += ["", "", "", "", "", "'''life'''"][r(6)-1];
+
+	// Generate moons
+	planet += generateMoons(planetsize, twinIndex);	
+
+	return planet;	
+}
+
+function generateMoons(parentSize, parentTwinIndex) {
+	
+	var moons = "";
+	
+	// Fixed probability distribution; but 1 in 10 instead get 6+d6, so max 18!
+	var count = r(10);
+	if (count == 10) { count = 6 + r(6) }
+	else
+	{
+		count = [1,1,2,2,2,3,4,5,6][count-1];
+	};
+
+	//console.log(count + " moons");
+	
+	// Twins have 1/4 as many moons rounded down to make twins' moons rare
+	if (typeof parentTwinIndex != "undefined") {
+		//console.log("TWIN: reducing moons from " + count);
+		count = Math.floor(count / 4);
+	}
+	
+	// For each moon
+	for (var planetMoon=1; planetMoon < count; planetMoon++)  {
+		
+		//console.log("moon" + planetMoon);
+		
+		var moonsize = "";
+	
+		moonsize = ["tiny","small","small","medium","medium","medium","large","large"][r(8)-1]
+	
+			// Markup
+			moons += "<br/>****";
+			
+			// Designate moon
+			moons += " " + ["A","B","C","D","E","F","G","H","I"][systemStar-1] + " " + starPlanet + " " 
+			
+			// If parent is a twin it needs to go in the designation
+			if (typeof parentTwinIndex != "undefined")
+			{
+				moons += " " + ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron"][parentTwinIndex] + " ";
+			}
+			
+			moons += ["i","ii","iii","iv","v","vi","vii","viii","ix","x","xi","xii","xiii","xiv","xv","xvi","xvii","xviii","xix"][planetMoon-1] + ", ";
+			
+			// Always name moon (for consistent use of seeded numbers), but only show if checkbox is ticked
+			moonname = "'" + PERSONNAMES[r(PERSONNAMES.length)-1] + "'s " + WORLDNAMETYPES[r(WORLDNAMETYPES.length)-1] + "' ";
+			if(document.getElementById('generateNames').checked == true) {
+					moons += moonname;
+			}
+
+			moons += moonsize + " moon: ";			
+			moons += generateAtmosphere();
+			moons += ["", "", "", "", "", "'''life''', "][r(6)-1];
+			moons += ["mineral-poor, ","average minerals, ","'''mineral-rich''', "][r(3)-1];
+			moons += ["ore-poor, ","average ores, ", "'''ore-rich''', "][r(3)-1];	
+		
+	}
+	
+	//console.log("Returning moons: " + moons)
+	
+	return moons;
+}
+
+// Generate an atmosphere, 
+function generateAtmosphere(parentMaterial) {
+
+	var atmosphere = "";
+
+		// ice planets must be cold (or they wouldn't be ice planets) and thus cannot sustain a high pressure gas without it liquifying
+		if (parentMaterial == "ice")
+		{
+			atmospherePressure = ["no/trace", ""][r(2)-1];
+		}
+		else
+		{
+			atmospherePressure = ["no/trace", "", "high-pressure"][r(3)-1];
+		}
+		
+		atmosphere += atmospherePressure + " ";
+		
+		if (atmospherePressure == "") {
+		
+			// For normal atmospheric pressures:
+		
+			// Ice planets always have cold atmospheres 
+			if (parentMaterial == "ice") {
+				atmosphere += ["dangerously cold ", "cold "][r(2)-1];
+			}
+			else
+			// Otherwise all temperatures are possible
+			{
+				atmosphere += ["dangerously cold ", "cold ", "", "", "hot ", "dangerously hot "][r(6)-1];
+			}
+		} else if (atmospherePressure == "high-pressure") {
+			// high-pressure atmospheres cannot be cold (because if it were cold it would already have condensed into a liquid)
+			atmosphere += ["", "", "hot ", "dangerously hot "][r(4)-1];
+		}
+		
+		// chemical breathability is only relevant if the atmosphere is at breathable pressure
+		if (atmospherePressure == "")
+		{
+			atmosphere += ["toxic", "unbreathable", "unbreathable", "'''filterable'''", "'''breathable'''", "'''breathable'''"][r(6)-1] + " ";
+		}
+		atmosphere += "atmosphere, ";
+
+		return atmosphere;
+}
+
+// General functions
+
+// r for "roll" - rolls a die. I should have called this d()!
+function r(max) {
+	return Math.ceil(Math.random() * max);
+}
+
+// Write text into the id='result' element on the page
+function display(text) {
+  var x = document.getElementById('result');
+  x.innerHTML = text;
+}
+
+// Switch stylesheet hrefs
+function swapStyleSheet(sheet){
+	document.getElementById('pagestyle').setAttribute('href', sheet);
+}
+
+</script>
+<script type='text/javascript'>//<![CDATA[
+
+// On load, i.e. when you arrive/refresh
+window.onload=function(){
+
+// generate a sector of 100 planets
+display(generateSector(100));
+
+}//]]> 
+
+</script>
+<title>Charlie's Space Generator</title>
+</head>
+<body>
+
+<h1>Charlie's Space Generator v0.6 RC1</h1>
+
+<p>By default this generator will generate a sector of 100 star-systems. You can also use the button to generate individual systems. The list is formatted to become a bulleted list if pasted into a MediaWiki.</p>
+
+<p>Generation is controlled by a seed; for example, a system generated with seed "Centari" will always be the same.</p>
+
+<p>Warning: seed consistency will not be preserved between different versions of the generator</p>
+
+<form>
+	Seed: <input type="text" id="seed"/>
+	Name planets & moons:<input type="checkbox" name="generateNames" id="generateNames" value="generateNames"/>
+	<br/>
+	Stars: <select name="starsDropdown" id="starsDropdown">
+		<option value= 1 >1</option>
+		<option value= 2 >2</option>
+		<option value= 3 >3</option>
+		<option value= 4 >4</option>
+		<option value= 5 >5</option>
+	</select>
+	<input type="button" name="generateSystem" value="Generate a single system" onclick="generateJustSystem()"/>
+	<br/>
+	Systems: <input type="text" id="systems" value="100"></systems><input type="button" value="Generate a sector" onclick="display(generateSector(parseInt(document.getElementById('systems').value)));"/>
+	<br/>
+	Scriptus Viridiorum: <input type="checkbox" id="astropath" onclick="if (document.getElementById('astropath').checked) {swapStyleSheet('astropath.css')} else {swapStyleSheet('normal.css')}"/>
+</form>
+
+<p id="result">...</p>
+</body>
+</html>
