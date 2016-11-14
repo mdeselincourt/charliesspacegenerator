@@ -1,5 +1,9 @@
 # charliesspacegenerator
-Javascript fictional space star system generator
+Javascript fictional space star system generator.
+
+Main javascript is embedded in the index.html (yes I know that's naughty)
+
+Runs locally or on a webserver - just download/install and open index.html
 
 Incorporates David Bau's Seedrandom library https://github.com/davidbau/seedrandom under MIT License
 
