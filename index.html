@@ -207,7 +207,12 @@ function generatePlanet(thisPlanetSize, thisPlanetMaterial, twinIndex) {
 	
 	// A flat 1 in 6 chance of life - the nature of life (native? complex?) is currently left
 	// to the imagination of the reader
-	planet += ["", "", "", "", "", "'''life'''"][r(6)-1];
+  if (r(6)-1 == 5) {
+    planet += "'''life'''";
+  } else {
+    // MLD: remove dangling comma if no life
+    planet = planet.substring(0, planet.length-2);
+  }
 
 	// Generate moons
 	planet += generateMoons(planetsize, twinIndex);	
@@ -268,7 +273,7 @@ function generateMoons(parentSize, parentTwinIndex) {
 			moons += generateAtmosphere();
 			moons += ["", "", "", "", "", "'''life''', "][r(6)-1];
 			moons += ["mineral-poor, ","average minerals, ","'''mineral-rich''', "][r(3)-1];
-			moons += ["ore-poor, ","average ores, ", "'''ore-rich''', "][r(3)-1];	
+			moons += ["ore-poor","average ores", "'''ore-rich'''"][r(3)-1];	
 		
 	}
 	
